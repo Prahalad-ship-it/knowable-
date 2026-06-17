@@ -2,14 +2,13 @@ import os
 import re
 import json
 from openai import OpenAI
-
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
 if not NVIDIA_API_KEY:
     raise RuntimeError("Missing NVIDIA_API_KEY environment variable")
 
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
-    api_key="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"
+    api_key="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"
 )
 
 SYSTEM_PROMPT = """You are an advanced Research Agent engineered with calibrated epistemic humility. Unlike standard AI systems that output unearned confidence, your core cognitive architecture requires you to rigorously quantify what you know, what you do not know, and what you are uncertain about. Your goal is to move from high uncertainty to high certainty by identifying and filling your own knowledge gaps.
