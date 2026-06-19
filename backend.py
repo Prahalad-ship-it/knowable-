@@ -1,51 +1,24 @@
 import os
-import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
+from dotenv import load_dotenv
+import re
 
+# Load environment variables from .env file
+load_dotenv()
 
-def load_dotenv_file(path):
-    values = {}
-    if not os.path.exists(path):
-        return values
-
-    with open(path, 'r', encoding='utf-8') as file:
-        for line in file:
-            line = line.strip()
-            if not line or line.startswith('#') or '=' not in line:
-                continue
-            key, value = line.split('=', 1)
-            values[key.strip()] = value.strip().strip('"').strip("'")
-    return values
-
-root_dir = os.path.dirname(os.path.abspath(__file__))
-
-dotenv_path = os.path.join(root_dir, '.env')
-if not os.path.exists(dotenv_path):
-    raise RuntimeError(
-        'Missing .env file. Create a .env file from .env.example and replace NVIDIA_API_KEY with your real key.'
-    )
-
-dotenv_values = load_dotenv_file(dotenv_path)
-
-NVIDIA_API_KEY = (
-    os.getenv('NVIDIA_API_KEY')
-    or os.getenv('OPENAI_API_KEY')
-    or dotenv_values.get('NVIDIA_API_KEY')
-    or dotenv_values.get('OPENAI_API_KEY')
-)
-
+# Get NVIDIA API key from environment
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
 if not NVIDIA_API_KEY:
     raise RuntimeError(
-        'Missing NVIDIA_API_KEY environment variable. Create a .env file from .env.example and replace the placeholder with your real key.'
+        "Missing NVIDIA_API_KEY environment variable. Create a .env file with your key."
     )
 
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=NVIDIA_API_KEY
 )
-
 
 SYSTEM_PROMPT = """You are an advanced Research Agent engineered with calibrated epistemic humility. Unlike standard AI systems that output unearned confidence, your core cognitive architecture requires you to rigorously quantify what you know, what you do not know, and what you are uncertain about. Your goal is to move from high uncertainty to high certainty by identifying and filling your own knowledge gaps.
 
@@ -78,11 +51,13 @@ Your actual answer here. If confidence is low (< 7/10), use caveated language li
 If confidence is low or gaps exist, define exactly how to resolve it. Propose a specific technical strategy or external data fetch needed to turn this unknown into a known.
 </knowledge_gap_resolution>"""
 
+def strip_xml_tags(text: str) -> str:
+    """Remove any XML-style tags from text."""
+    return re.sub(r'<[^>]+>', '', text)
 
 def extract_tag(text, tag):
     match = re.search(rf'<{tag}[^>]*>([\s\S]*?)</{tag}>', text, re.IGNORECASE)
     return match.group(1).strip() if match else ''
-
 
 def parse_scores(conf_block):
     def get_score(label):
@@ -98,7 +73,6 @@ def parse_scores(conf_block):
         'reasoning_certainty': get_score('Reasoning Certainty'),
         'justification': justification
     }
-
 
 def fallback_response(user_query: str) -> dict:
     normalized = user_query.lower()
@@ -120,9 +94,7 @@ def fallback_response(user_query: str) -> dict:
                 'Obtain ECG and troponin values immediately.',
                 'Collect full past medical history and medication list.',
                 'Perform chest imaging to rule out acute pulmonary embolism or aortic injury.'
-            ],
-            'raw': '',
-            'demo': True
+            ]
         }
     if 'fraud' in normalized or 'sentencing' in normalized or 'felony' in normalized:
         return {
@@ -142,9 +114,7 @@ def fallback_response(user_query: str) -> dict:
                 'Verify the statutory felony classification and loss threshold.',
                 'Check whether the court accepted a plea agreement or diversion program.',
                 'Gather defendant history and aggravating or mitigating circumstances.'
-            ],
-            'raw': '',
-            'demo': True
+            ]
         }
     if 'bridge' in normalized or 'steel' in normalized or 'coastal' in normalized:
         return {
@@ -164,9 +134,7 @@ def fallback_response(user_query: str) -> dict:
                 'Perform a load analysis including pedestrian, wind, and seismic forces.',
                 'Specify steel grade, corrosion protection, and section modulus.',
                 'Review local coastal codes for durability and maintenance requirements.'
-            ],
-            'raw': '',
-            'demo': True
+            ]
         }
     return {
         'scores': {
@@ -185,11 +153,8 @@ def fallback_response(user_query: str) -> dict:
             'Clarify the specific use case and required success criteria.',
             'Gather current data sources relevant to the domain.',
             'Review assumptions with a subject-matter expert.'
-        ],
-        'raw': '',
-        'demo': True
+        ]
     }
-
 
 def query_agent(user_query: str) -> dict:
     try:
@@ -209,15 +174,20 @@ def query_agent(user_query: str) -> dict:
 
         gaps_block = extract_tag(raw, 'assumptions_and_gaps')
         gaps = [
-            line.lstrip('-*• ').strip()
+            strip_xml_tags(line.lstrip('-*• ').strip())
             for line in gaps_block.split('\n')
             if line.strip() and len(line.strip()) > 5
         ]
 
-        calibrated = extract_tag(raw, 'calibrated_response') or raw
+        calibrated = extract_tag(raw, 'calibrated_response')
+        if not calibrated:
+            calibrated = strip_xml_tags(raw)  # fallback: strip any tags from raw
+        else:
+            calibrated = strip_xml_tags(calibrated)
+
         resolution_block = extract_tag(raw, 'knowledge_gap_resolution')
         resolutions = [
-            line.lstrip('-*•0123456789. ').strip()
+            strip_xml_tags(line.lstrip('-*•0123456789. ').strip())
             for line in resolution_block.split('\n')
             if line.strip() and len(line.strip()) > 5
         ]
@@ -226,43 +196,32 @@ def query_agent(user_query: str) -> dict:
             'scores': scores,
             'gaps': gaps,
             'calibrated_response': calibrated,
-            'resolutions': resolutions,
-            'raw': raw
+            'resolutions': resolutions
         }
     except Exception as exc:
         if '401' in str(exc) or 'Unauthorized' in str(exc):
             return fallback_response(user_query)
         raise
 
-
 app = Flask(__name__)
 CORS(app, resources={r'/api/*': {'origins': '*'}})
 
-
-@app.route('/api/query', methods=['GET', 'POST'])
-def api_query():
-    if request.method == 'GET':
-        return jsonify({
-            'status': 'ready',
-            'message': 'Send a POST request with JSON {"query": "your question"} to receive an Episteme answer.'
-        })
-
+@app.route('/api/ask', methods=['POST'])
+def api_ask():
     payload = request.get_json(force=True)
-    query = payload.get('query', '').strip()
-    if not query:
-        return jsonify({'error': 'Query is required'}), 400
+    question = payload.get('question', '').strip()
+    if not question:
+        return jsonify({'error': 'Question is required'}), 400
 
     try:
-        result = query_agent(query)
+        result = query_agent(question)
         return jsonify(result)
     except Exception as err:
         return jsonify({'error': str(err)}), 500
 
-
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'})
-
 
 @app.route('/', methods=['GET'])
 def index():
@@ -270,10 +229,9 @@ def index():
         'status': 'Episteme backend running',
         'routes': {
             '/api/health': 'GET',
-            '/api/query': 'POST (and GET for status)'
+            '/api/ask': 'POST'
         }
     })
-
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000, debug=False)
