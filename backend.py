@@ -15,8 +15,9 @@ if not NVIDIA_API_KEY:
         "Missing NVIDIA_API_KEY environment variable. Create a .env file with your key."
     )
 
+NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 client = OpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
+    base_url=NVIDIA_BASE_URL,
     api_key=NVIDIA_API_KEY
 )
 
