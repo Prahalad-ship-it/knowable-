@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse — Premium Dark SaaS Interface</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09090b;
+      --surface: #18181b;
+      --surface-soft: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #6366f1;
+      --radius: 28px;
+      --radius-sm: 18px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(1180px, 100%);
+      display: grid;
+      gap: 32px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-size: 1.05rem;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.06));
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .topbar button {
+      border: none;
+      padding: 14px 24px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 18px 40px rgba(99, 102, 241, 0.2);
+    }
+
+    .topbar button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 24px 48px rgba(99, 102, 241, 0.22);
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 28px;
+      grid-template-columns: 1.35fr 0.85fr;
+      align-items: stretch;
+    }
+
+    .hero-panel,
+    .aside-panel,
+    .footer-panel {
+      padding: 36px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 26px 48px rgba(0, 0, 0, 0.25);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .badge span {
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.8rem, 5vw, 4.4rem);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      max-width: 10ch;
+    }
+
+    .hero-copy {
+      margin: 0;
+      max-width: 640px;
+      color: var(--muted);
+      line-height: 1.9;
+      font-size: 1rem;
+    }
+
+    .hero-input {
+      display: grid;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .hero-input fieldset {
+      display: grid;
+      gap: 12px;
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .hero-input label {
+      font-size: 0.95rem;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .hero-input input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      padding: 18px 22px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .hero-input input:focus {
+      border-color: rgba(99, 102, 241, 0.48);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+      transform: translateY(-1px);
+    }
+
+    .hero-input input::placeholder {
+      color: #7c82a3;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .hero-actions .secondary {
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 14px 20px;
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255,255,255,0.02);
+      text-decoration: none;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .hero-actions .secondary:hover {
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-1px);
+    }
+
+    .hero-notes {
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-notes .note {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .hero-notes .note strong {
+      color: var(--text);
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .aside-panel h2 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    .aside-panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .stats-grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .stat-card {
+      padding: 20px 22px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      gap: 10px;
+    }
+
+    .stat-card span {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+    }
+
+    .stat-card strong {
+      font-size: 1.6rem;
+      display: block;
+      margin-top: 4px;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .feature-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .feature-item strong {
+      font-size: 0.98rem;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-item span {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.14);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .footer-panel {
+      display: grid;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .footer-panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 0.97rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 18px;
+      }
+
+      .hero-panel,
+      .aside-panel,
+      .footer-panel {
+        padding: 26px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-actions {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark">P</span>
+        Pulse
+      </a>
+      <nav class="nav-links">
+        <a href="#">Platform</a>
+        <a href="#">Insights</a>
+        <a href="#">Pricing</a>
+        <a href="#">Support</a>
+      </nav>
+      <button type="button">Launch demo</button>
+    </header>
+
+    <section class="hero-grid">
+      <article class="hero-panel">
+        <div class="badge"><span>live</span> Product heartbeat</div>
+        <h1>Deliver product clarity with measured, premium intent.</h1>
+        <p class="hero-copy">A clean interface designed for modern SaaS audiences: structured, responsive, and intentionally reduced so every interaction feels precise.</p>
+
+        <div class="hero-input">
+          <fieldset>
+            <label for="search">Search insights and product signals</label>
+            <input id="search" type="text" placeholder="Search dashboards, releases, or metrics" />
+          </fieldset>
+          <div class="hero-actions">
+            <button type="button">Run search</button>
+            <a class="secondary" href="#">View roadmap</a>
+          </div>
+        </div>
+
+        <div class="hero-notes">
+          <div class="note"><strong>monitored</strong> 24/7 release telemetry</div>
+          <div class="note"><strong>teams</strong> product, design, engineering</div>
+        </div>
+      </article>
+
+      <aside class="aside-panel">
+        <h2>Focused details, not noise.</h2>
+        <p>Every panel is balanced to work across desktop, tablet, and mobile with clean grid structure and deliberate typography.</p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span>response time</span>
+            <strong>38 ms</strong>
+            <div class="meta">Average across global edge locations.</div>
+          </div>
+          <div class="stat-card">
+            <span>uptime</span>
+            <strong>99.99%</strong>
+            <div class="meta">Validated by continuous monitoring.</div>
+          </div>
+          <div class="stat-card">
+            <span>release</span>
+            <strong>v5.4.1</strong>
+            <div class="meta">Stable production build.</div>
+          </div>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <strong>Audit-ready</strong>
+            <span>tagged</span>
+          </div>
+          <div class="feature-item">
+            <strong>Systemic</strong>
+            <span>scalable</span>
+          </div>
+          <div class="feature-item">
+            <strong>Refined</strong>
+            <span>minimal</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="footer-panel">
+      <p>Pulse is a dark, high-contrast interface crafted to feel premium yet approachable for teams who want fast comprehension and calm visual order.</p>
+      <div class="footer-links">
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#">Contact</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
