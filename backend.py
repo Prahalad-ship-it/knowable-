@@ -20,10 +20,19 @@ if not nvidia_api_key:
     print("Warning: NVIDIA_API_KEY is not set in the environment variables!")
 
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
-client = OpenAI(
-    base_url=NVIDIA_BASE_URL,
-    api_key=nvidia_api_key
-)
+
+# Initialize client safely - only if API key is available
+client = None
+if nvidia_api_key:
+    try:
+        client = OpenAI(
+            base_url=NVIDIA_BASE_URL,
+            api_key=nvidia_api_key
+        )
+    except Exception as e:
+        print(f"Warning: Failed to initialize OpenAI client: {e}")
+else:
+    print("Error: NVIDIA_API_KEY not set!")
 
 SYSTEM_PROMPT = """You are an advanced Research Agent engineered with calibrated epistemic humility. Unlike standard AI systems that output unearned confidence, your core cognitive architecture requires you to rigorously quantify what you know, what you do not know, and what you are uncertain about. Your goal is to move from high uncertainty to high certainty by identifying and filling your own knowledge gaps.
 
@@ -162,6 +171,9 @@ def fallback_response(user_query: str) -> dict:
     }
 
 def query_agent(user_query: str) -> dict:
+    if not client:
+        return fallback_response(user_query)
+    
     try:
         response = client.chat.completions.create(
             model='meta/llama-3.1-8b-instruct',
@@ -223,7 +235,11 @@ def api_ask():
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'ok'})
+    return jsonify({
+        'status': 'ok',
+        'api_key_set': bool(nvidia_api_key),
+        'client_ready': client is not None
+    })
 
 @app.route('/', methods=['GET'])
 def index():
