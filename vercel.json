@@ -1,4 +1,11 @@
 {
-  "buildCommand": "pip install -r requirements.txt",
-  "outputDirectory": "."
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ],
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  }
 }
