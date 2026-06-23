@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app, resources={r'/api/*': {'origins': '*'}})
 
 # 3. Correctly fetch the key name from the environment
-nvidia_api_key = os.environ.get("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") 
+nvidia_api_key = os.environ.get("NVIDIA_API_KEY") 
 
 if not nvidia_api_key:
     print("Warning: NVIDIA_API_KEY is not set in the environment variables!")
