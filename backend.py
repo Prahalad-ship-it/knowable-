@@ -5,23 +5,19 @@ from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# 1. Safely load dotenv if the file exists (local development)
 if os.path.exists(".env"):
     load_dotenv()
 
-# 2. Single Flask instance declaration
 app = Flask(__name__)
 CORS(app, resources={r'/api/*': {'origins': '*'}})
 
-# 3. Correctly fetch the key name from the environment
-nvidia_api_key = os.environ.get("NVIDIA_API_KEY") 
+nvidia_api_key = os.environ.get("NVIDIA_API_KEY")
 
 if not nvidia_api_key:
     print("Warning: NVIDIA_API_KEY is not set in the environment variables!")
 
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 
-# Initialize client safely - only if API key is available
 client = None
 if nvidia_api_key:
     try:
@@ -65,13 +61,15 @@ Your actual answer here. If confidence is low (< 7/10), use caveated language li
 If confidence is low or gaps exist, define exactly how to resolve it. Propose a specific technical strategy or external data fetch needed to turn this unknown into a known.
 </knowledge_gap_resolution>"""
 
+
 def strip_xml_tags(text: str) -> str:
-    """Remove any XML-style tags from text."""
     return re.sub(r'<[^>]+>', '', text)
+
 
 def extract_tag(text, tag):
     match = re.search(rf'<{tag}[^>]*>([\s\S]*?)</{tag}>', text, re.IGNORECASE)
     return match.group(1).strip() if match else ''
+
 
 def parse_scores(conf_block):
     def get_score(label):
@@ -88,92 +86,62 @@ def parse_scores(conf_block):
         'justification': justification
     }
 
+
 def fallback_response(user_query: str) -> dict:
     normalized = user_query.lower()
     if 'chest' in normalized or 'shortness of breath' in normalized or 'triage' in normalized:
         return {
-            'scores': {
-                'overall': 6,
-                'data_sufficiency': 5,
-                'reasoning_certainty': 6,
-                'justification': 'Limited clinical context means the diagnosis is plausible but not definitive.'
-            },
-            'gaps': [
-                'No vital signs or ECG data were provided.',
-                'Potential differential diagnoses like pulmonary embolism or aortic dissection are not excluded.',
-                'Unknown patient history for heart disease, medication use, or recent trauma.'
-            ],
+            'scores': {'overall': 6, 'data_sufficiency': 5, 'reasoning_certainty': 6,
+                       'justification': 'Limited clinical context means the diagnosis is plausible but not definitive.'},
+            'gaps': ['No vital signs or ECG data were provided.',
+                     'Potential differential diagnoses like pulmonary embolism or aortic dissection are not excluded.',
+                     'Unknown patient history for heart disease, medication use, or recent trauma.'],
             'calibrated_response': 'The current data suggests a high-risk cardiopulmonary event; immediate emergency evaluation is warranted, but the exact cause cannot be confirmed without imaging and vital signs.',
-            'resolutions': [
-                'Obtain ECG and troponin values immediately.',
-                'Collect full past medical history and medication list.',
-                'Perform chest imaging to rule out acute pulmonary embolism or aortic injury.'
-            ]
+            'resolutions': ['Obtain ECG and troponin values immediately.',
+                            'Collect full past medical history and medication list.',
+                            'Perform chest imaging to rule out acute pulmonary embolism or aortic injury.']
         }
     if 'fraud' in normalized or 'sentencing' in normalized or 'felony' in normalized:
         return {
-            'scores': {
-                'overall': 5,
-                'data_sufficiency': 4,
-                'reasoning_certainty': 5,
-                'justification': 'Key jurisdictional details and offense severity are missing, so conclusions remain tentative.'
-            },
-            'gaps': [
-                'Actual loss amount and victim impact are unknown.',
-                'Whether the defendant accepted a plea deal or has mitigating factors is unclear.',
-                'California sentencing guidelines vary widely by felony class and prior history.'
-            ],
+            'scores': {'overall': 5, 'data_sufficiency': 4, 'reasoning_certainty': 5,
+                       'justification': 'Key jurisdictional details and offense severity are missing, so conclusions remain tentative.'},
+            'gaps': ['Actual loss amount and victim impact are unknown.',
+                     'Whether the defendant accepted a plea deal or has mitigating factors is unclear.',
+                     'California sentencing guidelines vary widely by felony class and prior history.'],
             'calibrated_response': 'A plausible outcome is probation with fines for lower-level fraud, but significant custodial time or restitution is possible depending on loss amount and judicial discretion.',
-            'resolutions': [
-                'Verify the statutory felony classification and loss threshold.',
-                'Check whether the court accepted a plea agreement or diversion program.',
-                'Gather defendant history and aggravating or mitigating circumstances.'
-            ]
+            'resolutions': ['Verify the statutory felony classification and loss threshold.',
+                            'Check whether the court accepted a plea agreement or diversion program.',
+                            'Gather defendant history and aggravating or mitigating circumstances.']
         }
     if 'bridge' in normalized or 'steel' in normalized or 'coastal' in normalized:
         return {
-            'scores': {
-                'overall': 4,
-                'data_sufficiency': 3,
-                'reasoning_certainty': 4,
-                'justification': 'Without load values or environmental specs, the design conclusion is highly uncertain.'
-            },
-            'gaps': [
-                'Live load, wind load, and corrosion factors are not defined.',
-                'Material grade and beam cross-section details are missing.',
-                'Coastal salt exposure and maintenance plan are not available.'
-            ],
+            'scores': {'overall': 4, 'data_sufficiency': 3, 'reasoning_certainty': 4,
+                       'justification': 'Without load values or environmental specs, the design conclusion is highly uncertain.'},
+            'gaps': ['Live load, wind load, and corrosion factors are not defined.',
+                     'Material grade and beam cross-section details are missing.',
+                     'Coastal salt exposure and maintenance plan are not available.'],
             'calibrated_response': 'It may be feasible with a properly graded steel section, but the design cannot be confirmed until structural loads and environmental protections are specified.',
-            'resolutions': [
-                'Perform a load analysis including pedestrian, wind, and seismic forces.',
-                'Specify steel grade, corrosion protection, and section modulus.',
-                'Review local coastal codes for durability and maintenance requirements.'
-            ]
+            'resolutions': ['Perform a load analysis including pedestrian, wind, and seismic forces.',
+                            'Specify steel grade, corrosion protection, and section modulus.',
+                            'Review local coastal codes for durability and maintenance requirements.']
         }
     return {
-        'scores': {
-            'overall': 5,
-            'data_sufficiency': 4,
-            'reasoning_certainty': 5,
-            'justification': 'The prompt is outside the configured demo scenarios, so the response is a calibrated approximation.'
-        },
-        'gaps': [
-            'The domain and exact constraints are not fully specified.',
-            'No real-time data or supporting documentation is available.',
-            'The requested level of certainty depends on additional expert validation.'
-        ],
+        'scores': {'overall': 5, 'data_sufficiency': 4, 'reasoning_certainty': 5,
+                   'justification': 'The prompt is outside the configured demo scenarios, so the response is a calibrated approximation.'},
+        'gaps': ['The domain and exact constraints are not fully specified.',
+                 'No real-time data or supporting documentation is available.',
+                 'The requested level of certainty depends on additional expert validation.'],
         'calibrated_response': 'This is a demo response. The system identifies broad uncertainty and recommends verifying the key assumptions before acting.',
-        'resolutions': [
-            'Clarify the specific use case and required success criteria.',
-            'Gather current data sources relevant to the domain.',
-            'Review assumptions with a subject-matter expert.'
-        ]
+        'resolutions': ['Clarify the specific use case and required success criteria.',
+                        'Gather current data sources relevant to the domain.',
+                        'Review assumptions with a subject-matter expert.']
     }
+
 
 def query_agent(user_query: str) -> dict:
     if not client:
         return fallback_response(user_query)
-    
+
     try:
         response = client.chat.completions.create(
             model='meta/llama-3.1-8b-instruct',
@@ -196,11 +164,14 @@ def query_agent(user_query: str) -> dict:
             if line.strip() and len(line.strip()) > 5
         ]
 
+        # FIX: clean calibrated response properly
         calibrated = extract_tag(raw, 'calibrated_response')
         if not calibrated:
-            calibrated = strip_xml_tags(raw)
-        else:
-            calibrated = strip_xml_tags(calibrated)
+            # strip all XML blocks entirely and clean up
+            calibrated = re.sub(r'<[^>]+>.*?</[^>]+>', '', raw, flags=re.DOTALL)
+            calibrated = re.sub(r'\[.*?\]', '', calibrated)
+            calibrated = re.sub(r'-\s*\[.*', '', calibrated)
+        calibrated = strip_xml_tags(calibrated).strip()
 
         resolution_block = extract_tag(raw, 'knowledge_gap_resolution')
         resolutions = [
@@ -220,18 +191,19 @@ def query_agent(user_query: str) -> dict:
             return fallback_response(user_query)
         raise
 
+
 @app.route('/api/ask', methods=['POST'])
 def api_ask():
     payload = request.get_json(force=True)
     question = payload.get('question', '').strip()
     if not question:
         return jsonify({'error': 'Question is required'}), 400
-
     try:
         result = query_agent(question)
         return jsonify(result)
     except Exception as err:
         return jsonify({'error': str(err)}), 500
+
 
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -241,15 +213,15 @@ def health():
         'client_ready': client is not None
     })
 
+
 @app.route('/', methods=['GET'])
 def index():
     return jsonify({
         'status': 'Episteme backend running',
-        'routes': {
-            '/api/health': 'GET',
-            '/api/ask': 'POST'
-        }
+        'routes': {'/api/health': 'GET', '/api/ask': 'POST'}
     })
 
+
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8000, debug=False)
+    # FIX: host 0.0.0.0 so Railway can reach it, PORT from environment
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8000)), debug=False)
