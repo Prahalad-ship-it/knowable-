@@ -5,20 +5,25 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import re
 
-# Load environment variables from .env file
-load_dotenv()
+# 1. Safely load dotenv if the file exists (prevents crashing if missing)
+if os.path.exists(".env"):
+    load_dotenv()
 
-# Get NVIDIA API key from environment
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
-if not NVIDIA_API_KEY:
-    raise RuntimeError(
-        "Missing NVIDIA_API_KEY environment variable. Create a .env file with your key."
-    )
+app = Flask(__name__)
+CORS(app)
+
+# 2. Use .get() so it returns None instead of crashing if a key is briefly missing
+nvidia_api_key = os.environ.get("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"
+) 
+
+# Optional check just to see what's happening
+if not nvidia_api_key:
+    print("Warning: NVIDIA_API_KEY is not set in the environment variables!")
 
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 client = OpenAI(
     base_url=NVIDIA_BASE_URL,
-    api_key=NVIDIA_API_KEY
+    api_key=nvidia_api_key
 )
 
 SYSTEM_PROMPT = """You are an advanced Research Agent engineered with calibrated epistemic humility. Unlike standard AI systems that output unearned confidence, your core cognitive architecture requires you to rigorously quantify what you know, what you do not know, and what you are uncertain about. Your goal is to move from high uncertainty to high certainty by identifying and filling your own knowledge gaps.
