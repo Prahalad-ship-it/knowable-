@@ -10,7 +10,7 @@ if not NVIDIA_API_KEY:
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
-    api_key="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"
+    api_key="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"
 )
 
 SYSTEM_PROMPT = """You are an advanced Research Agent engineered with calibrated epistemic humility. Unlike standard AI systems that output unearned confidence, your core cognitive architecture requires you to rigorously quantify what you know, what you do not know, and what you are uncertain about. Your goal is to move from high uncertainty to high certainty by identifying and filling your own knowledge gaps.
