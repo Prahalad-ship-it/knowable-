@@ -1,22 +1,21 @@
 import os
+import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
-import re
 
-# 1. Safely load dotenv if the file exists (prevents crashing if missing)
+# 1. Safely load dotenv if the file exists (local development)
 if os.path.exists(".env"):
     load_dotenv()
 
+# 2. Single Flask instance declaration
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r'/api/*': {'origins': '*'}})
 
-# 2. Use .get() so it returns None instead of crashing if a key is briefly missing
-nvidia_api_key = os.environ.get("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"
-) 
+# 3. Correctly fetch the key name from the environment
+nvidia_api_key = os.environ.get( "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") 
 
-# Optional check just to see what's happening
 if not nvidia_api_key:
     print("Warning: NVIDIA_API_KEY is not set in the environment variables!")
 
@@ -187,7 +186,7 @@ def query_agent(user_query: str) -> dict:
 
         calibrated = extract_tag(raw, 'calibrated_response')
         if not calibrated:
-            calibrated = strip_xml_tags(raw)  # fallback: strip any tags from raw
+            calibrated = strip_xml_tags(raw)
         else:
             calibrated = strip_xml_tags(calibrated)
 
@@ -208,9 +207,6 @@ def query_agent(user_query: str) -> dict:
         if '401' in str(exc) or 'Unauthorized' in str(exc):
             return fallback_response(user_query)
         raise
-
-app = Flask(__name__)
-CORS(app, resources={r'/api/*': {'origins': '*'}})
 
 @app.route('/api/ask', methods=['POST'])
 def api_ask():
