@@ -61,3 +61,4 @@ pip install -r requirements.txt
 # Set up the Frontend
 cd ../frontend
 npm install
+npm run dev
