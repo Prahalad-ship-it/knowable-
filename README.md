@@ -50,7 +50,7 @@ Episteme AI leverages a decoupled architecture engineered for real-time streamin
 ```bash
 # Clone the repository
 git clone (https://github.com/Prahalad-ship-it/knowable-)
-cd episteme-ai
+cd knowable
 
 # Set up the Backend
 cd backend
