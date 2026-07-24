@@ -1,5 +1,9 @@
+// src/api.js (Frontend client)
+
 export async function queryEpisteme(question) {
-  const API_BASE_URL = "https://knowable-production-ae19.up.railway.app";
+  // Relative URL works perfectly because frontend and backend now share the same domain
+  const API_BASE_URL = ""; 
+  
   const response = await fetch(`${API_BASE_URL}/api/ask`, {
     method: 'POST',
     headers: {
