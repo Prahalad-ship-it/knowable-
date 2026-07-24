@@ -9,11 +9,5 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index"
-    }
   ]
 }
