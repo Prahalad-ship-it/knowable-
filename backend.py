@@ -145,7 +145,6 @@ def query_agent(user_query: str) -> dict:
 
     try:
         response = client.chat.completions.create(
-            # CHANGED: Updated target model identifier to OpenAI's prototype on NVIDIA NIM
             model='openai/gpt-oss-120b',
             messages=[
                 {'role': 'system', 'content': SYSTEM_PROMPT},
@@ -194,7 +193,8 @@ def query_agent(user_query: str) -> dict:
 
 @app.route('/api/ask', methods=['POST'])
 def api_ask():
-    payload = request.get_json(force=True)
+    # Added fallback helper to handle both regular JSON parsing and empty payload payloads safely
+    payload = request.get_json(force=True) or {}
     question = payload.get('question', '').strip()
     if not question:
         return jsonify({'error': 'Question is required'}), 400
