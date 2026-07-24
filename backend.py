@@ -192,9 +192,13 @@ def query_agent(user_query: str) -> dict:
 
 
 @app.route('/api/ask', methods=['POST'])
+@app.route('/ask', methods=['POST'])  # Fallback if Vercel serverless gateway strips the prefix
 def api_ask():
-    # Added fallback helper to handle both regular JSON parsing and empty payload payloads safely
-    payload = request.get_json(force=True) or {}
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        payload = {}
+        
     question = payload.get('question', '').strip()
     if not question:
         return jsonify({'error': 'Question is required'}), 400
@@ -206,6 +210,7 @@ def api_ask():
 
 
 @app.route('/api/health', methods=['GET'])
+@app.route('/health', methods=['GET'])
 def health():
     return jsonify({
         'status': 'ok',
