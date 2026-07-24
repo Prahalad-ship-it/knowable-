@@ -1,8 +1,15 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/ask",
-      "destination": "/api/ask.py"
+      "src": "api/ask.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/ask",
+      "dest": "api/ask.py"
     }
   ]
 }
