@@ -9,6 +9,7 @@ if os.path.exists(".env"):
     load_dotenv()
 
 app = Flask(__name__)
+# Keep CORS configuration permissive for frontend integration
 CORS(app, resources={r'/api/*': {'origins': '*'}})
 
 nvidia_api_key = os.environ.get("NVIDIA_API_KEY")
@@ -164,10 +165,8 @@ def query_agent(user_query: str) -> dict:
             if line.strip() and len(line.strip()) > 5
         ]
 
-        # FIX: clean calibrated response properly
         calibrated = extract_tag(raw, 'calibrated_response')
         if not calibrated:
-            # strip all XML blocks entirely and clean up
             calibrated = re.sub(r'<[^>]+>.*?</[^>]+>', '', raw, flags=re.DOTALL)
             calibrated = re.sub(r'\[.*?\]', '', calibrated)
             calibrated = re.sub(r'-\s*\[.*', '', calibrated)
@@ -223,5 +222,4 @@ def index():
 
 
 if __name__ == '__main__':
-    # FIX: host 0.0.0.0 so Railway can reach it, PORT from environment
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8000)), debug=False)
