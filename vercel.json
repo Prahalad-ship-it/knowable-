@@ -2,14 +2,25 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/ask.py",
+      "src": "package.json",
+      "use": "@vercel/static-build"
+    },
+    {
+      "src": "backend.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/api/ask",
-      "dest": "api/ask.py"
+      "src": "/api/(.*)",
+      "dest": "backend.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ]
 }
