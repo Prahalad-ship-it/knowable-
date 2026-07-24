@@ -1,11 +1,14 @@
 /**
- * Sends a user query to the Episteme Flask backend.
- * Handles local development (port 8000) and production on Vercel automatically.
+ * Sends a user query to the Episteme Research Agent backend.
+ * Handles both local development and production routing seamlessly.
  */
 export async function queryEpisteme(question) {
+  // Determine backend base URL: 
+  // Vercel routes '/api' locally via its CLI dev server, but if you run Vite separately, 
+  // it needs to fallback to the standalone Flask server port (8000).
   const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://127.0.0.1:8000' 
-    : ''; // Empty string lets Vercel route it relatively on the same domain
+    : ''; 
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/ask`, {
@@ -13,19 +16,20 @@ export async function queryEpisteme(question) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ question: question.trim() })
+      body: JSON.stringify({ question: question.strip ? question.strip() : question })
     });
 
+    // Capture response data safely
     const payload = await response.json().catch(() => null);
 
     if (!response.ok) {
-      console.error('Backend error:', response.status, payload);
-      throw new Error(payload?.error || `API error (${response.status})`);
+      console.error('Backend returned an error status:', response.status, payload);
+      throw new Error(payload?.error || `API error (${response.status}): Failed to fetch response.`);
     }
 
-    return payload; // Returns the parsed backend object
+    return payload;
   } catch (error) {
-    console.error('Network error in queryEpisteme:', error);
+    console.error('Network or Operational error in queryEpisteme:', error);
     throw error;
   }
 }
