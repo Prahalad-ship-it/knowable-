@@ -145,7 +145,8 @@ def query_agent(user_query: str) -> dict:
 
     try:
         response = client.chat.completions.create(
-            model='meta/llama-3.1-8b-instruct',
+            # CHANGED: Updated target model identifier to OpenAI's prototype on NVIDIA NIM
+            model='openai/gpt-oss-120b',
             messages=[
                 {'role': 'system', 'content': SYSTEM_PROMPT},
                 {'role': 'user', 'content': user_query}
