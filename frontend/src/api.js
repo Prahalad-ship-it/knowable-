@@ -1,11 +1,9 @@
-// src/api.js (Frontend client)
-
 export async function queryEpisteme(question) {
-  // Automatically falls back to the production URL if window.location isn't absolute
+  // Use absolute URL locally, but use a relative path in production
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://127.0.0.1:8000' 
-    : 'https://episteme-calibration.vercel.app'; 
-  
+    : ''; // Empty string means it stays on the current domain
+
   const response = await fetch(`${API_BASE_URL}/api/ask`, {
     method: 'POST',
     headers: {
