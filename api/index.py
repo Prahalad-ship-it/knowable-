@@ -1,9 +1,21 @@
 import os
 import re
+import threading
+import asyncio
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
+from triage_protocol_processor import (
+    sanitize_and_tokenize_triage_text,
+    calculate_triage_confidence,
+    OnlineTriageStats,
+    hand_off_to_flywheel,
+    StreamingTriageTokenizer,
+    persist_payload_locally,
+    redact_pii,
+)
+import uuid
 
 if os.path.exists(".env"):
     load_dotenv()
@@ -202,8 +214,78 @@ def api_ask():
     question = payload.get('question', '').strip()
     if not question:
         return jsonify({'error': 'Question is required'}), 400
+    # Immediately schedule background capture + flywheel handoff (non-blocking)
     try:
+        # Prefer explicit tokens/logprobs if caller provided them
+        tokens = payload.get('tokens')
+        logprobs = payload.get('logprobs')
+
+        if tokens is None:
+            tokens = sanitize_and_tokenize_triage_text(question)
+
+        # Compute metrics only if numeric logprobs present and align
+        metrics = None
+        if isinstance(logprobs, list) and len(logprobs) == len(tokens) and len(logprobs) > 0:
+            try:
+                # Use batch calculation for clarity
+                critical_indices = [i for i, t in enumerate(tokens) if re.fullmatch(r"\d+(?:\.\d+)?%?", t)]
+                metrics = calculate_triage_confidence(logprobs, critical_indices)
+            except Exception:
+                metrics = None
+        else:
+            # No logprobs: build minimal OnlineTriageStats from provided tokens if needed
+            metrics = {"note": "no_logprobs_provided", "token_count": len(tokens)}
+
+        webhook_url = os.environ.get('FLYWHEEL_WEBHOOK_URL')
+
+        # Check for explicit opt-in consent to capture raw query/response locally
+        consent_capture = bool(payload.get('consent_capture'))
+
+        # First call the agent to produce a result synchronously
         result = query_agent(question)
+
+        def _background(capture_id: str = None):
+            try:
+                # Persist opt-in raw capture locally (redacted) when requested
+                if consent_capture:
+                    try:
+                        # redaction
+                        red_q = redact_pii(question)
+                        # attempt to extract a short textual response to store
+                        resp_text = ''
+                        try:
+                            resp_text = result.get('calibrated_response') if isinstance(result, dict) else ''
+                        except Exception:
+                            resp_text = ''
+                        red_r = redact_pii(resp_text)
+                        local_payload = {
+                            'capture_id': capture_id,
+                            'query': red_q,
+                            'response': red_r,
+                            'metrics': metrics,
+                            'consent_capture': True,
+                            'timestamp_utc': __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
+                        }
+                        persist_payload_locally(local_payload)
+                    except Exception:
+                        pass
+
+                # Always send anonymized metrics to flywheel (non-blocking)
+                asyncio.run(hand_off_to_flywheel(question, metrics or {}, trigger_status=True, webhook_url=webhook_url))
+            except Exception:
+                # Swallow exceptions to avoid affecting request handling
+                pass
+
+        # Generate a capture id if needed and start the background thread
+        capture_id = str(uuid.uuid4()) if consent_capture else None
+        t = threading.Thread(target=_background, args=(capture_id,), daemon=True)
+        t.start()
+
+        # If consented, include capture id in the response so client can correlate
+        if consent_capture and isinstance(result, dict):
+            result = dict(result)
+            result['capture_id'] = capture_id
+
         return jsonify(result)
     except Exception as err:
         return jsonify({'error': str(err)}), 500
