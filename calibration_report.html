@@ -1,0 +1,351 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Episteme AI — Model Calibration Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3498db;
+        }
+        .metric-card.warning { border-left-color: #f39c12; }
+        .metric-card.danger { border-left-color: #e74c3c; }
+        .metric-card.success { border-left-color: #27ae60; }
+        .metric-card h3 {
+            color: #2c3e50;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .metric-card .subtext {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 8px;
+        }
+        section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        section h2 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th {
+            background: #ecf0f1;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #bdc3c7;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #f39c12;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .highlight.danger {
+            background: #f8d7da;
+            border-left-color: #e74c3c;
+        }
+        .highlight.success {
+            background: #d4edda;
+            border-left-color: #27ae60;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .status-badge.good { background: #d4edda; color: #155724; }
+        .status-badge.warning { background: #fff3cd; color: #856404; }
+        .status-badge.bad { background: #f8d7da; color: #721c24; }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .interpretation {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        footer {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Model Calibration Report</h1>
+            <p>Episteme AI — Comprehensive calibration analysis across 790 samples</p>
+        </header>
+        
+        <div class="metrics-grid">
+            <div class="metric-card danger">
+                <h3>Expected Calibration Error</h3>
+                <div class="value">0.6431</div>
+                <div class="subtext">Lower is better (ideal: 0)</div>
+            </div>
+            <div class="metric-card danger">
+                <h3>Maximum Calibration Error</h3>
+                <div class="value">0.9168</div>
+                <div class="subtext">Max gap between confidence and accuracy</div>
+            </div>
+            <div class="metric-card warning">
+                <h3>Brier Score</h3>
+                <div class="value">0.4477</div>
+                <div class="subtext">Lower is better (ideal: 0)</div>
+            </div>
+            <div class="metric-card danger">
+                <h3>Refinement</h3>
+                <div class="value">0.3569</div>
+                <div class="subtext">1 - ECE (higher is better)</div>
+            </div>
+        </div>
+        
+        <section>
+            <h2>📊 Key Calibration Metrics</h2>
+            <div class="interpretation">
+                <strong>📈 ECE (Expected Calibration Error): 0.6431</strong><br>
+                The ECE measures the average gap between predicted confidence and empirical accuracy across confidence bins.
+                ❌ POOR: ECE is high, indicating significant calibration problems.
+            </div>
+            
+            <div class="interpretation">
+                <strong>📈 MCE (Maximum Calibration Error): 0.9168</strong><br>
+                MCE is the maximum gap in any single confidence bin. This represents the worst-case calibration error.
+                ❌ POOR: MCE is very high, some confidence levels are highly miscalibrated.
+            </div>
+            
+            <div class="interpretation">
+                <strong>📈 Brier Score: 0.4477</strong><br>
+                The Brier Score is the mean squared difference between predicted probabilities and actual outcomes.
+                ❌ POOR: Brier Score indicates weak probabilistic calibration.
+            </div>
+            
+            <table>
+                <tr>
+                    <td><strong>Negative Log Loss</strong></td>
+                    <td>1.1229</td>
+                </tr>
+                <tr>
+                    <td><strong>Calibration Slope</strong></td>
+                    <td>1.4460 (Ideal: 1.0)</td>
+                </tr>
+                <tr>
+                    <td><strong>Calibration Intercept</strong></td>
+                    <td>-4.3282 (Ideal: 0.0)</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Samples</strong></td>
+                    <td>790</td>
+                </tr>
+            </table>
+        </section>
+        
+        <section>
+            <h2>⚠️ Confidence Issues</h2>
+            <div class="highlight danger">
+                <strong>🔴 Over-Confident Cases</strong><br>
+                <strong>Count: 267</strong> (33.8% of samples)<br>
+                These are predictions where the model was >70% confident but still incorrect.
+                These cases suggest the model may be too confident in its predictions.
+            </div>
+            
+            <div class="highlight">
+                <strong>🟡 Under-Confident Cases</strong><br>
+                <strong>Count: 0</strong> (0.0% of samples)<br>
+                These are predictions where the model was <50% confident but still correct.
+                These cases suggest the model may be unnecessarily hesitant in some scenarios.
+            </div>
+        </section>
+        
+        <section>
+            <h2>🔍 Audit Status Distribution</h2>
+            <table>
+                <tr>
+                    <td><strong>Passed Calibration</strong></td>
+                    <td><span class="status-badge good">✓ 285 (36.1%)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Audit Flagged (Low Confidence)</strong></td>
+                    <td><span class="status-badge warning">⚠ 505 (63.9%)</span></td>
+                </tr>
+            </table>
+        </section>
+        
+        <section>
+            <h2>📋 Calibration Bin Details</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bin</th>
+                            <th>Confidence Range</th>
+                            <th>Mean Confidence</th>
+                            <th>Empirical Accuracy</th>
+                            <th>Calibration Gap</th>
+                            <th>Sample Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr>
+            <td>Bin 1</td>
+            <td>0.40 - 0.50</td>
+            <td>0.4748</td>
+            <td>0.0000</td>
+            <td>0.4748</td>
+            <td>2</td>
+        </tr>
+        
+        <tr>
+            <td>Bin 2</td>
+            <td>0.50 - 0.60</td>
+            <td>0.5714</td>
+            <td>0.0196</td>
+            <td>0.5518</td>
+            <td>102</td>
+        </tr>
+        
+        <tr>
+            <td>Bin 3</td>
+            <td>0.60 - 0.70</td>
+            <td>0.6505</td>
+            <td>0.0175</td>
+            <td>0.6330</td>
+            <td>401</td>
+        </tr>
+        
+        <tr>
+            <td>Bin 4</td>
+            <td>0.70 - 0.80</td>
+            <td>0.7381</td>
+            <td>0.0553</td>
+            <td>0.6828</td>
+            <td>235</td>
+        </tr>
+        
+        <tr>
+            <td>Bin 5</td>
+            <td>0.80 - 0.90</td>
+            <td>0.8280</td>
+            <td>0.1020</td>
+            <td>0.7260</td>
+            <td>49</td>
+        </tr>
+        
+        <tr>
+            <td>Bin 6</td>
+            <td>0.90 - 1.00</td>
+            <td>0.9168</td>
+            <td>0.0000</td>
+            <td>0.9168</td>
+            <td>1</td>
+        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section>
+            <h2>📊 Visualizations</h2>
+            <p>Comprehensive calibration analysis plots:</p>
+            <img src="calibration_report_plots.png" alt="Calibration Report Plots">
+        </section>
+        
+        <section>
+            <h2>✅ Recommendations</h2>
+            <ul style="line-height: 2;">
+                <li><strong>ECE Improvement:</strong> Focus on the bins with the largest calibration gaps. Implement temperature scaling or Platt scaling for better calibration.</li>
+                <li><strong>Over-confidence:</strong> If over-confident cases are high, consider increasing the regularization or using confidence penalty in the loss function.</li>
+                <li><strong>Under-confidence:</strong> If under-confident cases are prevalent, the model may benefit from confidence boosting or removal of excessive regularization.</li>
+                <li><strong>Monitoring:</strong> Track calibration metrics over time. Re-calibrate the model periodically as data distributions shift.</li>
+                <li><strong>Decision Thresholds:</strong> Use calibration curves to set optimal decision thresholds for business-critical applications.</li>
+            </ul>
+        </section>
+        
+        <footer>
+            <p>Generated by Episteme AI Calibration Suite | 2026-08-10 16:33:12</p>
+        </footer>
+    </div>
+</body>
+</html>
