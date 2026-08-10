@@ -1,2 +1,11 @@
-.env
+﻿.env
 frontend/node_modules
+__pycache__/
+.pytest_cache/
+.kilo/
+.claude/
+.vscode/
+run.log
+*.pyc
+*.pyo
+*.egg-info/
